@@ -1,0 +1,4 @@
+.key*
+__pycache__/
+*.pyc
+support.db

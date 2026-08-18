@@ -4,6 +4,8 @@ The whole school knowledge base sits in the system prompt, so Gemini's implicit
 caching makes repeated questions cheap. No vector database needed.
 """
 import os
+import traceback
+
 import telebot
 from google import genai
 from google.genai import types
@@ -26,8 +28,9 @@ SYSTEM_PROMPT = f"""Ты — ИИ-помощник российско-таджи
 === ИНФОРМАЦИЯ О ШКОЛЕ ===
 {KNOWLEDGE}"""
 
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 MAX_HISTORY = 20  # messages kept per chat before the conversation restarts
+DEBUG_ERRORS = os.environ.get("DEBUG_ERRORS") == "1"  # show API errors in the chat while setting up
 TELEGRAM_LIMIT = 4000
 
 # the "0:unset" fallbacks keep the module importable in tests; __main__ demands the real values
@@ -82,9 +85,12 @@ def answer(message):
     bot.send_chat_action(message.chat.id, "typing")
     try:
         reply = get_chat(message.chat.id).send_message(message.text).text
-    except Exception as error:  # network, quota, safety block
-        print("gemini error:", error)
-        bot.reply_to(message, "Не получилось получить ответ. Попробуйте ещё раз чуть позже.")
+    except Exception as error:  # network, quota, bad key, safety block
+        traceback.print_exc()
+        text = "Не получилось получить ответ. Попробуйте ещё раз чуть позже."
+        if DEBUG_ERRORS:
+            text += "\n\n" + f"{type(error).__name__}: {error}"[:1000]
+        bot.reply_to(message, text)
         return
     for part in split_message(reply or "Не понял вопрос. Попробуйте сформулировать иначе."):
         bot.send_message(message.chat.id, part)
