@@ -516,4 +516,4 @@ def handle_state_text(message):
         handle_answer_text(message, state['question_id'])
 
 if __name__ == '__main__':
-    bot.polling(non_stop=True)
+    bot.infinity_polling()  # survives transient network timeouts; polling() dies on them
