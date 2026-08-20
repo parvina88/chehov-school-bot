@@ -99,4 +99,5 @@ def answer(message):
 if __name__ == "__main__":
     assert os.environ.get("AI_BOT_TOKEN"), "set AI_BOT_TOKEN"
     assert os.environ.get("GEMINI_API_KEY"), "set GEMINI_API_KEY"
+    print(f"ai_bot.py starting as @{bot.get_me().username}, model={MODEL}", flush=True)
     bot.infinity_polling()
